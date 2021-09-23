@@ -9,6 +9,6 @@ export const schema = makeSchema({
   },
   contextType: {
     module: join(__dirname, './context.ts'),
-    export: 'Context'
+    export: 'Context',
   },
 })

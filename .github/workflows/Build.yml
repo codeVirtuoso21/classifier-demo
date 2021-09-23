@@ -1,0 +1,194 @@
+name: Build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  install-dependencies:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: install
+        run: yarn install
+  
+  frontend_check-types:
+    name: "Frontend: Type check"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+
+      - name: Typescript Check
+        run: cd frontend && yarn check:types
+
+  frontend_build:
+    name: "Frontend: Build"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+        
+      - name: Build
+        run: cd frontend && yarn build
+  
+  frontend_deploy:
+    name: "Frontend: Deploy"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: frontend_build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.2.0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: spaceboy0621docker
+          password: athena123123
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
+      - run: >
+          git_hash=`git rev-parse --short ${GITHUB_SHA}`
+          current_date=`date +'%Y%m%d'`
+          echo "::set-output name=docker_tag::${current_date}_github_${{ env.GITHUB_REF_SLUG }}_${git_hash}_${GITHUB_RUN_NUMBER}"
+        id: docker_tag
+      - name: Build and push
+        uses: docker/build-push-action@v2.6.1
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          tags: tractableai/classifier-demo-frontend
+          push: true
+
+  frontend_lint:
+    name: "Frontend: Lint"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+
+      - name: Lint:fix
+        run: cd frontend && yarn lint:fix
+
+      - name: Lint
+        run: cd frontend && yarn lint
+  
+  backend_check-types:
+    name: "Backend: Type check"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+
+      - name: Typescript Check
+        run: cd backend && yarn check:types
+
+  backend_lint:
+    name: "Backend: Lint"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+
+      - name: Lint:fix
+        run: cd backend && yarn lint:fix
+
+      - name: Lint
+        run: cd backend && yarn lint
+
+  backend_generate:
+    name: "Backend: Generate"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+      - name: Install
+        run: yarn install
+
+      - name: Generate
+        run: cd backend && yarn generate
+        
+  backend_build:
+    name: "Backend: Build"
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.17.6
+          
+      - name: Install
+        run: yarn install
+        
+      - name: Build
+        run: cd backend && yarn build
+        
+  backend_deploy:
+    name: "Backend: Deploy"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: backend_build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.2.0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: spaceboy0621docker
+          password: athena123123
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
+      - run: >
+          git_hash=`git rev-parse --short ${GITHUB_SHA}`
+          current_date=`date +'%Y%m%d'`
+          echo "::set-output name=docker_tag::${current_date}_github_${{ env.GITHUB_REF_SLUG }}_${git_hash}_${GITHUB_RUN_NUMBER}"
+        id: docker_tag
+      - name: Build and push
+        uses: docker/build-push-action@v2.6.1
+        with:
+          context: backend
+          file: backend/Dockerfile
+          tags: tractableai/classifier-demo-backend
+          push: true

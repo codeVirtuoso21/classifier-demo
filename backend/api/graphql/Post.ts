@@ -4,7 +4,7 @@ import {
   interfaceType,
   nonNull,
   objectType,
-  stringArg
+  stringArg,
 } from 'nexus'
 
 export const Media = interfaceType({

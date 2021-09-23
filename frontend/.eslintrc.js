@@ -21,6 +21,8 @@ module.exports = {
   plugins: ['react', '@typescript-eslint'],
   rules: {
     'react/react-in-jsx-scope': 'off',
+    // disable the rule for all files
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   },
   settings: {
     react: {
@@ -30,6 +32,9 @@ module.exports = {
   overrides: [
     {
       files: ['**/*.test.{ts,tsx}'],
+      rules: {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"]
+      },
       env: {
         jest: true,
       },

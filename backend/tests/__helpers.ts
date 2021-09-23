@@ -15,7 +15,7 @@ type TestContext = {
 }
 
 export function createTestContext(): TestContext {
-  let ctx = {} as TestContext
+  const ctx = {} as TestContext
   const graphqlCtx = graphqlTestContext()
   const prismaCtx = prismaTestContext()
 
