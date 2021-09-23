@@ -124,9 +124,6 @@ jobs:
       - name: Install
         run: yarn install
 
-      - name: Lint:fix
-        run: cd backend && yarn lint:fix
-
       - name: Lint
         run: cd backend && yarn lint
 
